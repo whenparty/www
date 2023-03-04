@@ -1,0 +1,13 @@
+{
+  "name": "www",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "vite",
+    "build": "vite build"
+  },
+  "author": "nkrivous",
+  "license": "MIT",
+  "devDependencies": {
+    "vite": "^4.1.4"
+  }
+}
