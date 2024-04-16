@@ -19,3 +19,5 @@ jobs:
           firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_WHENPARTY_WEBSITE }}"
           channelId: live
           projectId: whenparty-website
+        env:
+          FIREBASE_CLI_EXPERIMENTS: webframeworks
