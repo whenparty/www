@@ -43,9 +43,24 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_DEPLOY_KEY }}
-        env:
+          script_stop: true
           script: |
+            echo "🟡 DEPLOY STARTING..."
             cd ~/projects/infra
-            docker compose down www || true
+
+            echo "🧼 Stopping www container..."
+            docker compose stop www || true
+
+            echo "📥 Pulling updated www image..."
             docker compose pull www
+
+            echo "🚀 Starting www container..."
             docker compose up -d www
+
+            echo "⏱️ Waiting for www to start..."
+            sleep 5
+
+            echo "🔍 Verifying www container is running..."
+            docker ps --filter "name=www"
+
+            echo "✅ Deploy complete."
