@@ -1,14 +1,10 @@
 name: Deploy to VPS
 
 on:
-  workflow_run:
-    workflows: ["Build and Push to GHCR"]
-    types:
-      - completed
-
+  workflow_dispatch: 
+  
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -18,12 +14,8 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_DEPLOY_KEY }}
-          envs: GITHUB_TOKEN,GITHUB_ACTOR
           script_stop: true
           debug: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTOR: ${{ github.actor }}
           script: |
             cd ~/projects/infra
             echo "=== BEFORE DEPLOY: docker ps ==="

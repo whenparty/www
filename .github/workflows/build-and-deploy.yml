@@ -1,4 +1,4 @@
-name: Build and Push to GHCR
+name: Build and Deploy to VPS
 
 on:
   push:
@@ -30,3 +30,22 @@ jobs:
           context: .
           push: true
           tags: ghcr.io/whenparty/www:latest
+
+  deploy:
+    needs: build-and-push
+    if: ${{ success() }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Connect to VPS and deploy
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_DEPLOY_KEY }}
+        env:
+          script: |
+            cd ~/projects/infra
+            docker compose down www || true
+            docker compose pull www
+            docker compose up -d www
