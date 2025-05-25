@@ -1,8 +1,8 @@
 name: Deploy to VPS
 
 on:
-  workflow_dispatch: 
-  
+  workflow_dispatch:
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -15,17 +15,24 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_DEPLOY_KEY }}
           script_stop: true
-          debug: true
+
           script: |
-            cd ~/projects/infra && \
-            echo "=== BEFORE DEPLOY: docker ps ===" && \
-            docker ps && \
-            echo "=== BEFORE DEPLOY: docker images ===" && \
-            docker images && \
-            docker compose down www || true && \
-            docker compose pull www && \
-            docker compose up -d www && \
-            echo "=== AFTER DEPLOY: docker ps ===" && \
-            docker ps && \
-            echo "=== AFTER DEPLOY: docker images ===" && \
-            docker images
+            echo "🟡 DEPLOY STARTING..."
+            cd ~/projects/infra
+
+            echo "🧼 Stopping www container..."
+            docker compose stop www || true
+
+            echo "📥 Pulling updated www image..."
+            docker compose pull www
+
+            echo "🚀 Starting www container..."
+            docker compose up -d www
+
+            echo "⏱️ Waiting for www to start..."
+            sleep 5
+
+            echo "🔍 Verifying www container is running..."
+            docker ps --filter "name=www"
+
+            echo "✅ Deploy complete."
