@@ -17,15 +17,15 @@ jobs:
           script_stop: true
           debug: true
           script: |
-            cd ~/projects/infra
-            echo "=== BEFORE DEPLOY: docker ps ==="
-            docker ps
-            echo "=== BEFORE DEPLOY: docker images ==="
-            docker images
-            docker compose down www || true
-            docker compose pull www
-            docker compose up -d www
-            echo "=== AFTER DEPLOY: docker ps ==="
-            docker ps
-            echo "=== AFTER DEPLOY: docker images ==="
+            cd ~/projects/infra && \
+            echo "=== BEFORE DEPLOY: docker ps ===" && \
+            docker ps && \
+            echo "=== BEFORE DEPLOY: docker images ===" && \
+            docker images && \
+            docker compose down www || true && \
+            docker compose pull www && \
+            docker compose up -d www && \
+            echo "=== AFTER DEPLOY: docker ps ===" && \
+            docker ps && \
+            echo "=== AFTER DEPLOY: docker images ===" && \
             docker images
