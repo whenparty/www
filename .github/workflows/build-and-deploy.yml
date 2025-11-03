@@ -1,66 +1,67 @@
-name: Build and Deploy to VPS
+name: Deploy Website
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: whenparty/www
 
 permissions:
   contents: read
   packages: write
 
 jobs:
-  build-and-push:
+  build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+      - uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push image to GHCR
-        uses: docker/build-push-action@v5
+      - uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ghcr.io/whenparty/www:latest
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
   deploy:
-    needs: build-and-push
-    if: ${{ success() }}
+    needs: build
     runs-on: ubuntu-latest
-
     steps:
-      - name: Connect to VPS and deploy
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Copy service files to VPS
+        uses: appleboy/scp-action@v0.1.5
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_DEPLOY_KEY }}
+          source: "docker-compose.yml,nginx-config.conf"
+          target: "/opt/services/whenparty/www/"
+
+      - name: Deploy to VPS
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_DEPLOY_KEY }}
-          script_stop: true
           script: |
-            echo "🟡 DEPLOY STARTING..."
-            cd ~/projects/infra
+            set -euo pipefail
 
-            echo "🧼 Stopping www container..."
-            docker compose stop www || true
+            # Deploy service
+            cd /opt/services/whenparty/www
+            docker compose pull
+            docker compose up -d
 
-            echo "📥 Pulling updated www image..."
-            docker compose pull www
+            # Copy nginx config to infra
+            cp nginx-config.conf /opt/services/whenparty/infra/nginx/conf.d/www.conf
 
-            echo "🚀 Starting www container..."
-            docker compose up -d www
-
-            echo "⏱️ Waiting for www to start..."
-            sleep 5
-
-            echo "🔍 Verifying www container is running..."
-            docker ps --filter "name=www"
-
-            echo "✅ Deploy complete."
+            # Validate and reload nginx
+            docker exec nginx nginx -t && docker exec nginx nginx -s reload
