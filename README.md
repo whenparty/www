@@ -1,10 +1,10 @@
 # WhenParty Website (www)
 
-Static website service for nii.au / www.nii.au
+Static website service
 
 ## Architecture
 
-This service is part of the WhenParty multi-repo infrastructure. See [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) for full architecture details.
+This service is part of the WhenParty multi-repo infrastructure. See the architecture overview in the `whenparty/infra` repository (`PROJECT_OVERVIEW.md`) for full details.
 
 ### Deployment Flow
 
@@ -19,7 +19,7 @@ Reload nginx
 ```
 Internet → Cloudflare (SSL termination) →
 VPS nginx proxy (Origin cert, port 443) →
-www container (web_network, internal only)
+www container (wp_www network, internal only)
 ```
 
 **Security**: The www container has NO exposed ports. All traffic must go through the nginx proxy with Cloudflare origin certificates.
@@ -46,6 +46,7 @@ services:
 ```
 
 Then run:
+
 ```bash
 docker compose up
 ```
@@ -94,9 +95,11 @@ gh workflow run build-and-deploy.yml
 ## Security Features
 
 ### Cloudflare IP Validation
+
 nginx config only trusts `CF-Connecting-IP` header from Cloudflare's official IP ranges. This prevents IP spoofing.
 
 ### Modern Security Headers
+
 - `Strict-Transport-Security` - Forces HTTPS for 1 year
 - `Content-Security-Policy` - Restricts resource loading
 - `Referrer-Policy` - Controls referrer information
@@ -109,25 +112,27 @@ nginx config only trusts `CF-Connecting-IP` header from Cloudflare's official IP
 - `Cross-Origin-Resource-Policy` - Protects against cross-origin reads
 
 ### Server Hardening
+
 - `server_tokens off` - Hides nginx version from response headers
 
 ### Gzip Compression
+
 Dockerfile enables and configures gzip compression:
+
 - Uncomments `gzip on;` directive (if commented)
 - Configures `gzip_vary`, `gzip_proxied`, and compression level
 - Enables compression for HTML, CSS, JS, JSON, XML, fonts, and SVG
 - Reduces bandwidth usage and improves page load times
 
 ### Health Checks
+
 Container includes health check to verify nginx is serving content.
 
 ## Maintenance
 
 ### Update Cloudflare IP Ranges
 
-Cloudflare occasionally updates their IP ranges. Check and update `nginx-config.conf`:
-
-Source: https://www.cloudflare.com/ips/
+The Cloudflare allow list lives in `/opt/services/whenparty/infra/nginx/conf.d/cloudflare_real_ip.conf` and is managed by the `infra/scripts/update-cloudflare-real-ip.sh` automation. Ensure that job is scheduled on the VPS so the proxy reloads with the latest ranges—no manual edits to `nginx-config.conf` are required.
 
 ### Update Content
 
@@ -138,6 +143,7 @@ Source: https://www.cloudflare.com/ips/
 ## Troubleshooting
 
 ### Check container status
+
 ```bash
 ssh whenpartydeploy@VPS_IP
 cd /opt/services/whenparty/www
@@ -146,17 +152,20 @@ docker compose logs
 ```
 
 ### Check nginx config
+
 ```bash
 docker exec nginx nginx -t
 docker exec nginx cat /etc/nginx/conf.d/www.conf
 ```
 
 ### Manually reload nginx
+
 ```bash
 docker exec nginx nginx -s reload
 ```
 
 ### View logs
+
 ```bash
 docker compose logs -f www
 ```

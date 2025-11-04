@@ -4,8 +4,8 @@ services:
     container_name: www
     restart: unless-stopped
     networks:
-      - web_network
+      - wp_www
 
 networks:
-  web_network:
+  wp_www:
     external: true
