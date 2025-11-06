@@ -69,7 +69,7 @@ docker run -p 3000:80 www:local
 Ensure these GitHub secrets are configured:
 
 - `VPS_HOST` - VPS IP address
-- `VPS_USER` - Deployment user (whenpartydeploy)
+- `VPS_USER` - Deployment user
 - `VPS_DEPLOY_KEY` - SSH private key
 
 **Note**: This assumes your GHCR packages are **public**. If private, add `GHCR_READ_TOKEN` secret and login step to workflow.
@@ -145,7 +145,7 @@ The Cloudflare allow list lives in `/opt/services/whenparty/infra/nginx/conf.d/c
 ### Check container status
 
 ```bash
-ssh whenpartydeploy@VPS_IP
+ssh user@VPS_IP
 cd /opt/services/whenparty/www
 docker compose ps
 docker compose logs
